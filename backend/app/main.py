@@ -10,6 +10,8 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from .capture_schemas import BuildCaptureDatasetRequest
+from .capture_sheet import CaptureSheetService
 from .dataset import VariationGenerator
 from .preprocess import HandwritingPreprocessor
 from .rendering import HandwritingRenderer
@@ -30,6 +32,7 @@ preprocessor = HandwritingPreprocessor()
 segmenter = CharacterSegmenter()
 dataset_builder = VariationGenerator()
 renderer = HandwritingRenderer()
+capture_sheet_service = CaptureSheetService()
 
 app.mount("/data", StaticFiles(directory=str(DATA_DIR)), name="data")
 
@@ -69,6 +72,34 @@ def list_styles():
         import json
         styles.append(json.loads(style_json.read_text(encoding="utf-8")))
     return styles
+
+
+@app.get("/capture/templates")
+def list_capture_templates():
+    templates = capture_sheet_service.list_templates()
+    for template in templates:
+        capture_sheet_service.render_template_svg(template['template_id'])
+    return [
+        {
+            **template,
+            'download_url': f"/data/templates/{template['template_id']}.svg",
+        }
+        for template in templates
+    ]
+
+
+@app.post("/capture/upload")
+async def upload_capture_sheet(template_id: str = Form(...), file: UploadFile = File(...)):
+    upload_id = str(uuid.uuid4())[:10]
+    upload_path = UPLOADS_DIR / f"capture_{upload_id}_{file.filename}"
+    with upload_path.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return capture_sheet_service.extract_from_sheet(template_id, upload_path)
+
+
+@app.post("/capture/build-style")
+def build_capture_style(request: BuildCaptureDatasetRequest):
+    return capture_sheet_service.build_dataset_from_sheets(request.style_name, [sheet.model_dump() for sheet in request.sheets])
 
 
 @app.post("/render")

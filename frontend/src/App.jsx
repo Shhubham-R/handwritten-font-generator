@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 const API = 'http://localhost:8000';
 const DEFAULT_LABELS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?;:-()';
@@ -12,8 +12,16 @@ export default function App() {
   const [renderText, setRenderText] = useState('This should look handwritten.');
   const [renderedUrl, setRenderedUrl] = useState('');
   const [randomness, setRandomness] = useState(0.45);
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState('characters-v1');
+  const [captureFile, setCaptureFile] = useState(null);
+  const [captureSheets, setCaptureSheets] = useState([]);
 
   const inferredSequence = useMemo(() => DEFAULT_LABELS.split(''), []);
+
+  useEffect(() => {
+    fetch(`${API}/capture/templates`).then((r) => r.json()).then(setTemplates).catch(() => {});
+  }, []);
 
   async function upload() {
     if (!file) return;
@@ -68,17 +76,61 @@ export default function App() {
     setRenderedUrl(`${API}${data.url}`);
   }
 
+  async function uploadCaptureSheet() {
+    if (!captureFile || !selectedTemplate) return;
+    const formData = new FormData();
+    formData.append('template_id', selectedTemplate);
+    formData.append('file', captureFile);
+    const response = await fetch(`${API}/capture/upload`, { method: 'POST', body: formData });
+    const data = await response.json();
+    setCaptureSheets((prev) => [data, ...prev]);
+  }
+
+  async function buildCaptureStyle() {
+    const response = await fetch(`${API}/capture/build-style`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ style_name: styleName, sheets: captureSheets }),
+    });
+    const style = await response.json();
+    setStyles((prev) => [style, ...prev]);
+  }
+
   return (
     <div className="app-shell">
       <header>
         <h1>Handwritten Font Generator</h1>
-        <p>Upload a handwriting sheet, correct the labels, build a style, then render text with variation-aware glyph selection.</p>
+        <p>Use printable capture sheets for accurate dataset building, then render text with your handwriting assets.</p>
       </header>
 
       <section className="card">
-        <h2>1. Upload</h2>
+        <h2>1. Capture-sheet mode (recommended)</h2>
+        <div className="styles-list">
+          {templates.map((template) => (
+            <a key={template.template_id} href={`${API}${template.download_url}`} target="_blank" rel="noreferrer">
+              <button type="button">Download {template.name}</button>
+            </a>
+          ))}
+        </div>
+        <div className="row" style={{ marginTop: 12 }}>
+          <select value={selectedTemplate} onChange={(e) => setSelectedTemplate(e.target.value)}>
+            {templates.map((template) => (
+              <option key={template.template_id} value={template.template_id}>{template.name}</option>
+            ))}
+          </select>
+          <input type="file" accept="image/*,.png,.jpg,.jpeg" onChange={(e) => setCaptureFile(e.target.files?.[0] ?? null)} />
+        </div>
+        <div className="styles-list" style={{ marginTop: 12 }}>
+          <button onClick={uploadCaptureSheet}>Upload filled capture sheet</button>
+          <button onClick={buildCaptureStyle} disabled={!captureSheets.length}>Build style from uploaded sheets</button>
+        </div>
+        {!!captureSheets.length && <p>{captureSheets.length} capture sheet(s) uploaded.</p>}
+      </section>
+
+      <section className="card">
+        <h2>2. Legacy free-form OCR mode</h2>
         <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        <button onClick={upload}>Process sheet</button>
+        <button onClick={upload}>Process random sheet</button>
         {uploadResult && (
           <div className="preview-block">
             <img src={`${API}${uploadResult.preview_path}`} alt="preprocessed" className="preview-image" />
@@ -89,7 +141,7 @@ export default function App() {
 
       {uploadResult && (
         <section className="card">
-          <h2>2. Correct labels</h2>
+          <h2>3. Correct legacy-mode labels</h2>
           <input value={styleName} onChange={(e) => setStyleName(e.target.value)} placeholder="Style name" />
           <div className="segments-grid">
             {uploadResult.segments.map((segment) => (
@@ -109,7 +161,7 @@ export default function App() {
       )}
 
       <section className="card">
-        <h2>3. Render</h2>
+        <h2>4. Render</h2>
         <div className="row">
           <button onClick={loadStyles}>Refresh styles</button>
           <input value={renderText} onChange={(e) => setRenderText(e.target.value)} placeholder="Type text to render" />
