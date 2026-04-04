@@ -1,0 +1,16 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+button, input { font: inherit; }
+button { cursor: pointer; border: 0; border-radius: 10px; padding: 10px 14px; background: #38bdf8; color: #082f49; font-weight: 700; }
+input[type="text"], input:not([type]), input[type="file"] { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #334155; background: #111827; color: #e2e8f0; }
+.app-shell { max-width: 1200px; margin: 0 auto; padding: 32px 20px 80px; }
+header { margin-bottom: 24px; }
+.card { background: #111827; border: 1px solid #1f2937; border-radius: 18px; padding: 20px; margin-bottom: 20px; }
+.preview-image { max-width: 100%; border-radius: 12px; background: white; }
+.preview-block { margin-top: 16px; }
+.segments-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; margin-top: 16px; }
+.segment-card { background: #0b1220; border: 1px solid #253046; border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.segment-card img { width: 100%; height: 72px; object-fit: contain; background: white; border-radius: 8px; }
+.row { display: grid; grid-template-columns: 180px 1fr; gap: 12px; align-items: center; }
+.styles-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.render-frame { width: 100%; min-height: 340px; margin-top: 18px; border: 1px solid #334155; border-radius: 12px; background: white; }

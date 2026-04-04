@@ -1,0 +1,80 @@
+from __future__ import annotations
+
+import shutil
+import uuid
+from pathlib import Path
+from typing import Dict, List
+
+import cv2
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+from .dataset import VariationGenerator
+from .preprocess import HandwritingPreprocessor
+from .rendering import HandwritingRenderer
+from .schemas import RenderRequest, UploadResponse
+from .segmentation import CharacterSegmenter
+from .storage import DATA_DIR, SEGMENTS_DIR, STYLES_DIR, UPLOADS_DIR
+
+app = FastAPI(title="Handwritten Font Generator API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+preprocessor = HandwritingPreprocessor()
+segmenter = CharacterSegmenter()
+dataset_builder = VariationGenerator()
+renderer = HandwritingRenderer()
+
+app.mount("/data", StaticFiles(directory=str(DATA_DIR)), name="data")
+
+
+@app.get("/health")
+def health() -> Dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.post("/upload", response_model=UploadResponse)
+async def upload_handwriting(file: UploadFile = File(...)):
+    document_id = str(uuid.uuid4())[:10]
+    upload_path = UPLOADS_DIR / f"{document_id}_{file.filename}"
+    with upload_path.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    processed = preprocessor.run(upload_path)
+    preview_path = UPLOADS_DIR / f"{document_id}_preview.png"
+    cv2.imwrite(str(preview_path), processed.clean)
+    segments = segmenter.segment(processed.clean, SEGMENTS_DIR / document_id)
+    return UploadResponse(document_id=document_id, preview_path=f"/data/uploads/{preview_path.name}", segments=segments)
+
+
+@app.post("/styles")
+async def create_style(style_name: str = Form(...), labels: str = Form(...)):
+    import json
+
+    parsed = json.loads(labels)
+    style = dataset_builder.build_style(style_name, parsed)
+    return style
+
+
+@app.get("/styles")
+def list_styles():
+    styles: List[Dict] = []
+    for style_json in STYLES_DIR.glob("*/style.json"):
+        import json
+        styles.append(json.loads(style_json.read_text(encoding="utf-8")))
+    return styles
+
+
+@app.post("/render")
+def render_text(request: RenderRequest):
+    try:
+        output_id, output_path = renderer.render_svg(request)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return {"render_id": output_id, "path": output_path, "url": f"/data/outputs/{Path(output_path).name}"}
