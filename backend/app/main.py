@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from .capture_schemas import BuildCaptureDatasetRequest
 from .capture_sheet import CaptureSheetService
 from .dataset import VariationGenerator
+from .freeform import FreeformPageService
 from .preprocess import HandwritingPreprocessor
 from .rendering import HandwritingRenderer
 from .schemas import RenderRequest, UploadResponse
@@ -33,6 +34,7 @@ segmenter = CharacterSegmenter()
 dataset_builder = VariationGenerator()
 renderer = HandwritingRenderer()
 capture_sheet_service = CaptureSheetService()
+freeform_page_service = FreeformPageService()
 
 app.mount("/data", StaticFiles(directory=str(DATA_DIR)), name="data")
 
@@ -100,6 +102,15 @@ async def upload_capture_sheet(template_id: str = Form(...), file: UploadFile = 
 @app.post("/capture/build-style")
 def build_capture_style(request: BuildCaptureDatasetRequest):
     return capture_sheet_service.build_dataset_from_sheets(request.style_name, [sheet.model_dump() for sheet in request.sheets])
+
+
+@app.post("/freeform/upload")
+async def upload_freeform_page(file: UploadFile = File(...)):
+    upload_id = str(uuid.uuid4())[:10]
+    upload_path = UPLOADS_DIR / f"freeform_{upload_id}_{file.filename}"
+    with upload_path.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return freeform_page_service.process_page(upload_path)
 
 
 @app.post("/render")

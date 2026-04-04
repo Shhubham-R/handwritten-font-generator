@@ -16,6 +16,8 @@ export default function App() {
   const [selectedTemplate, setSelectedTemplate] = useState('characters-v1');
   const [captureFile, setCaptureFile] = useState(null);
   const [captureSheets, setCaptureSheets] = useState([]);
+  const [freeformFile, setFreeformFile] = useState(null);
+  const [freeformResult, setFreeformResult] = useState(null);
 
   const inferredSequence = useMemo(() => DEFAULT_LABELS.split(''), []);
 
@@ -96,6 +98,15 @@ export default function App() {
     setStyles((prev) => [style, ...prev]);
   }
 
+  async function uploadFreeformPage() {
+    if (!freeformFile) return;
+    const formData = new FormData();
+    formData.append('file', freeformFile);
+    const response = await fetch(`${API}/freeform/upload`, { method: 'POST', body: formData });
+    const data = await response.json();
+    setFreeformResult(data);
+  }
+
   return (
     <div className="app-shell">
       <header>
@@ -128,7 +139,30 @@ export default function App() {
       </section>
 
       <section className="card">
-        <h2>2. Legacy free-form OCR mode</h2>
+        <h2>2. Freeform notebook-page analysis</h2>
+        <input type="file" accept="image/*" onChange={(e) => setFreeformFile(e.target.files?.[0] ?? null)} />
+        <div className="styles-list" style={{ marginTop: 12 }}>
+          <button onClick={uploadFreeformPage}>Analyze page into lines and words</button>
+        </div>
+        {freeformResult && (
+          <div className="preview-block">
+            <img src={`${API}${freeformResult.preprocessed_image}`} alt="freeform preprocessed" className="preview-image" />
+            <p>{freeformResult.lines.length} lines, {freeformResult.words.length} word crops detected</p>
+            <div className="segments-grid">
+              {freeformResult.words.slice(0, 24).map((word, idx) => (
+                <div key={`${word.line_index}-${word.word_index}-${idx}`} className="segment-card">
+                  <img src={`${API}${word.image_path}`} alt={word.predicted_text || 'word'} />
+                  <strong>{word.predicted_text || '—'}</strong>
+                  <small>{word.confidence ? `OCR ${(word.confidence * 100).toFixed(0)}%` : 'No OCR guess'}</small>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="card">
+        <h2>3. Legacy single-character OCR mode</h2>
         <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
         <button onClick={upload}>Process random sheet</button>
         {uploadResult && (
@@ -141,7 +175,7 @@ export default function App() {
 
       {uploadResult && (
         <section className="card">
-          <h2>3. Correct legacy-mode labels</h2>
+          <h2>4. Correct legacy-mode labels</h2>
           <input value={styleName} onChange={(e) => setStyleName(e.target.value)} placeholder="Style name" />
           <div className="segments-grid">
             {uploadResult.segments.map((segment) => (
@@ -161,7 +195,7 @@ export default function App() {
       )}
 
       <section className="card">
-        <h2>4. Render</h2>
+        <h2>5. Render</h2>
         <div className="row">
           <button onClick={loadStyles}>Refresh styles</button>
           <input value={renderText} onChange={(e) => setRenderText(e.target.value)} placeholder="Type text to render" />
