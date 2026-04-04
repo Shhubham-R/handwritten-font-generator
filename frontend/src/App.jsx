@@ -24,7 +24,7 @@ export default function App() {
     setUploadResult(data);
     const nextLabels = {};
     data.segments.forEach((segment, index) => {
-      nextLabels[segment.image_path] = inferredSequence[index] || '';
+      nextLabels[segment.image_path] = segment.suggested_label || inferredSequence[index] || '';
     });
     setLabels(nextLabels);
   }
@@ -94,12 +94,13 @@ export default function App() {
           <div className="segments-grid">
             {uploadResult.segments.map((segment) => (
               <div key={segment.id} className="segment-card">
-                <img src={`${API}/data/segments/${uploadResult.document_id}/${segment.id}.png`} alt={segment.id} />
+                <img src={`${API}${segment.image_path}`} alt={segment.id} />
                 <input
                   maxLength={1}
                   value={labels[segment.image_path] || ''}
                   onChange={(e) => setLabels((prev) => ({ ...prev, [segment.image_path]: e.target.value }))}
                 />
+                <small>{segment.confidence ? `OCR ${(segment.confidence * 100).toFixed(0)}%` : 'No OCR guess'}</small>
               </div>
             ))}
           </div>

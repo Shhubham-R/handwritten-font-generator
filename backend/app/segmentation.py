@@ -3,11 +3,12 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import cv2
 import numpy as np
 
+from .ocr import OCRLabelSuggester
 from .schemas import SegmentCandidate
 
 
@@ -21,6 +22,9 @@ class Component:
 
 
 class CharacterSegmenter:
+    def __init__(self) -> None:
+        self.ocr = OCRLabelSuggester()
+
     def segment(self, binary_image: np.ndarray, out_dir: Path) -> List[SegmentCandidate]:
         out_dir.mkdir(parents=True, exist_ok=True)
         num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(binary_image, connectivity=8)
@@ -36,7 +40,7 @@ class CharacterSegmenter:
         segments: List[SegmentCandidate] = []
 
         for component in components:
-            padding = 6
+            padding = 8
             x0 = max(component.x - padding, 0)
             y0 = max(component.y - padding, 0)
             x1 = component.x + component.w + padding
@@ -45,11 +49,14 @@ class CharacterSegmenter:
             segment_id = str(uuid.uuid4())
             segment_path = out_dir / f"{segment_id}.png"
             cv2.imwrite(str(segment_path), crop)
+            label, confidence = self.ocr.suggest_from_crop(crop)
             segments.append(
                 SegmentCandidate(
                     id=segment_id,
                     bbox=[int(x0), int(y0), int(x1), int(y1)],
-                    image_path=str(segment_path),
+                    image_path=f"/data/segments/{out_dir.name}/{segment_id}.png",
+                    suggested_label=label,
+                    confidence=confidence,
                 )
             )
         return segments
