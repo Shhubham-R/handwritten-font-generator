@@ -14,6 +14,7 @@ from .capture_schemas import BuildCaptureDatasetRequest
 from .capture_sheet import CaptureSheetService
 from .dataset import VariationGenerator
 from .freeform import FreeformPageService
+from .freeform_schemas import BuildFreeformStyleRequest
 from .preprocess import HandwritingPreprocessor
 from .rendering import HandwritingRenderer
 from .schemas import RenderRequest, UploadResponse
@@ -101,7 +102,10 @@ async def upload_capture_sheet(template_id: str = Form(...), file: UploadFile = 
 
 @app.post("/capture/build-style")
 def build_capture_style(request: BuildCaptureDatasetRequest):
-    return capture_sheet_service.build_dataset_from_sheets(request.style_name, [sheet.model_dump() for sheet in request.sheets])
+    items = []
+    for sheet in request.sheets:
+        items.extend(item.model_dump() for item in sheet.items)
+    return dataset_builder.build_style_from_capture_items(request.style_name, items)
 
 
 @app.post("/freeform/upload")
@@ -111,6 +115,11 @@ async def upload_freeform_page(file: UploadFile = File(...)):
     with upload_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     return freeform_page_service.process_page(upload_path)
+
+
+@app.post("/freeform/build-style")
+def build_freeform_style(request: BuildFreeformStyleRequest):
+    return dataset_builder.build_style_from_freeform_words(request.style_name, [page.model_dump() for page in request.pages])
 
 
 @app.post("/render")

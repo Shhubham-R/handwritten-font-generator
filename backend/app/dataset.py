@@ -9,10 +9,18 @@ import cv2
 import numpy as np
 
 from .schemas import GlyphVariant
-from .storage import STYLES_DIR, write_json
+from .storage import ROOT, STYLES_DIR, write_json
 
 
 class VariationGenerator:
+    def resolve_image_path(self, segment_path: str) -> Path:
+        path = Path(segment_path)
+        if path.is_absolute():
+            return path
+        if segment_path.startswith('/data/'):
+            return ROOT / segment_path.lstrip('/')
+        return path
+
     def normalize(self, image: np.ndarray, size: int = 128) -> np.ndarray:
         coords = cv2.findNonZero(image)
         if coords is None:
@@ -59,7 +67,7 @@ class VariationGenerator:
         for symbol, segment_paths in labeled_segments.items():
             symbol_variants: List[Dict] = []
             for segment_path in segment_paths:
-                img = cv2.imread(segment_path, cv2.IMREAD_GRAYSCALE)
+                img = cv2.imread(str(self.resolve_image_path(segment_path)), cv2.IMREAD_GRAYSCALE)
                 if img is None:
                     continue
                 base = self.normalize(img)
@@ -90,3 +98,25 @@ class VariationGenerator:
         }
         write_json(style_dir / "style.json", manifest)
         return manifest
+
+    def build_style_from_capture_items(self, style_name: str, items: List[Dict]) -> Dict:
+        grouped: Dict[str, List[str]] = {}
+        for item in items:
+            label = (item.get('label') or '').strip()
+            image_path = item.get('image_path')
+            if not label or not image_path or len(label) != 1:
+                continue
+            grouped.setdefault(label, []).append(image_path)
+        return self.build_style(style_name, grouped)
+
+    def build_style_from_freeform_words(self, style_name: str, pages: List[Dict]) -> Dict:
+        grouped: Dict[str, List[str]] = {}
+        for page in pages:
+            for word in page.get('words', []):
+                text = (word.get('corrected_text') or word.get('predicted_text') or '').strip()
+                image_path = word.get('image_path')
+                if not image_path:
+                    continue
+                if len(text) == 1 and text.isprintable():
+                    grouped.setdefault(text, []).append(image_path)
+        return self.build_style(style_name, grouped)

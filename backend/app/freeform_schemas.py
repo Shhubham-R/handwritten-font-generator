@@ -11,6 +11,7 @@ class WordItem(BaseModel):
     bbox: List[int]
     predicted_text: Optional[str] = None
     confidence: Optional[float] = None
+    corrected_text: Optional[str] = None
 
 
 class LineItem(BaseModel):
@@ -28,3 +29,8 @@ class FreeformManifest(BaseModel):
     preprocessed_image: str
     lines: List[LineItem] = Field(default_factory=list)
     words: List[WordItem] = Field(default_factory=list)
+
+
+class BuildFreeformStyleRequest(BaseModel):
+    style_name: str
+    pages: List[FreeformManifest]
