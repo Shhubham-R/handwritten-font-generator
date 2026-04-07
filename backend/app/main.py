@@ -17,7 +17,7 @@ from .freeform import FreeformPageService
 from .freeform_schemas import BuildFreeformStyleRequest
 from .preprocess import HandwritingPreprocessor
 from .rendering import HandwritingRenderer
-from .schemas import RenderRequest, UploadResponse
+from .schemas import RenderRequest, StyleSummary, UploadResponse
 from .segmentation import CharacterSegmenter
 from .storage import DATA_DIR, SEGMENTS_DIR, STYLES_DIR, UPLOADS_DIR
 
@@ -75,6 +75,28 @@ def list_styles():
         import json
         styles.append(json.loads(style_json.read_text(encoding="utf-8")))
     return styles
+
+
+@app.get("/styles/summary", response_model=List[StyleSummary])
+def list_style_summaries():
+    summaries: List[StyleSummary] = []
+    for style_json in STYLES_DIR.glob("*/style.json"):
+        import json
+        style = json.loads(style_json.read_text(encoding="utf-8"))
+        glyphs = style.get('glyphs', {})
+        glyph_count = sum(1 for variants in glyphs.values() if variants)
+        variant_count = sum(len(variants) for variants in glyphs.values())
+        summaries.append(
+            StyleSummary(
+                style_id=style.get('style_id', style_json.parent.name),
+                name=style.get('name', style_json.parent.name),
+                glyph_count=glyph_count,
+                variant_count=variant_count,
+                renderable=glyph_count > 0 and variant_count > 0,
+            )
+        )
+    summaries.sort(key=lambda item: (not item.renderable, -item.glyph_count, item.name.lower()))
+    return summaries
 
 
 @app.get("/capture/templates")

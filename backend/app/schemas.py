@@ -29,6 +29,14 @@ class HandwritingStyle(BaseModel):
     glyphs: Dict[str, List[GlyphVariant]] = Field(default_factory=dict)
 
 
+class StyleSummary(BaseModel):
+    style_id: str
+    name: str
+    glyph_count: int = 0
+    variant_count: int = 0
+    renderable: bool = False
+
+
 class RenderRequest(BaseModel):
     style_id: str
     text: str

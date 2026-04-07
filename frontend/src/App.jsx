@@ -13,6 +13,7 @@ export default function App() {
   const [styleName, setStyleName] = useState('My Handwriting');
   const [labels, setLabels] = useState({});
   const [styles, setStyles] = useState([]);
+  const [styleSummaries, setStyleSummaries] = useState([]);
   const [renderText, setRenderText] = useState('This should look handwritten.');
   const [renderedUrl, setRenderedUrl] = useState('');
   const [randomness, setRandomness] = useState(0.45);
@@ -80,6 +81,7 @@ export default function App() {
       if (!response.ok) throw new Error('Failed to build style');
       const style = await response.json();
       setStyles((prev) => [style, ...prev]);
+      loadStyles();
     } finally {
       setBusy((prev) => ({ ...prev, createStyle: false }));
     }
@@ -89,15 +91,22 @@ export default function App() {
     setBusy((prev) => ({ ...prev, styles: true }));
     setStylesError('');
     try {
-      const response = await fetch(`${API}/styles`);
-      if (!response.ok) throw new Error(`Failed to load styles (${response.status})`);
-      const loadedStyles = await response.json();
+      const [stylesResponse, summariesResponse] = await Promise.all([
+        fetch(`${API}/styles`),
+        fetch(`${API}/styles/summary`),
+      ]);
+      if (!stylesResponse.ok) throw new Error(`Failed to load styles (${stylesResponse.status})`);
+      if (!summariesResponse.ok) throw new Error(`Failed to load style summaries (${summariesResponse.status})`);
+      const loadedStyles = await stylesResponse.json();
+      const loadedSummaries = await summariesResponse.json();
       setStyles(loadedStyles);
+      setStyleSummaries(loadedSummaries);
       if (!loadedStyles.length) {
         setStylesError('No styles found yet. Build one first.');
       }
     } catch (error) {
       setStyles([]);
+      setStyleSummaries([]);
       setStylesError(error.message || 'Could not load styles.');
     } finally {
       setBusy((prev) => ({ ...prev, styles: false }));
@@ -164,6 +173,7 @@ export default function App() {
       if (!response.ok) throw new Error('Failed to build style from capture sheets');
       const style = await response.json();
       setStyles((prev) => [style, ...prev]);
+      loadStyles();
     } finally {
       setBusy((prev) => ({ ...prev, captureBuild: false }));
     }
@@ -199,6 +209,7 @@ export default function App() {
       setStyles((prev) => [style, ...prev]);
       setRenderedUrl('');
       setRenderError('');
+      loadStyles();
     } finally {
       setBusy((prev) => ({ ...prev, freeformBuild: false }));
     }
@@ -323,6 +334,16 @@ export default function App() {
         {stylesError && <p className="status-message error">{stylesError}</p>}
         {!stylesError && !renderableStyles.length && <p className="status-message">No renderable styles yet. Build a style first, then render.</p>}
         {!!renderableStyles.length && <p className="status-message">{renderableStyles.length} renderable style(s) ready.</p>}
+        {!!styleSummaries.length && (
+          <div className="style-summary-list">
+            {styleSummaries.slice(0, 8).map((style) => (
+              <div key={style.style_id} className={`style-summary-card ${style.renderable ? 'ok' : 'muted'}`}>
+                <strong>{style.name}</strong>
+                <small>{style.glyph_count} glyphs · {style.variant_count} variants</small>
+              </div>
+            ))}
+          </div>
+        )}
         <label>Randomness: {randomness.toFixed(2)}</label>
         <input type="range" min="0" max="1" step="0.01" value={randomness} onChange={(e) => setRandomness(Number(e.target.value))} />
         <div className="styles-list">

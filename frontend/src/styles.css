@@ -40,6 +40,10 @@ header { margin-bottom: 24px; }
 .button-link button { width: 100%; }
 .status-message { margin: 10px 0 0; color: #cbd5e1; }
 .status-message.error { color: #fca5a5; }
+.style-summary-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 14px; }
+.style-summary-card { border: 1px solid #253046; border-radius: 12px; padding: 12px; background: #0b1220; display: flex; flex-direction: column; gap: 6px; }
+.style-summary-card.ok { border-color: #14532d; }
+.style-summary-card.muted { opacity: 0.75; }
 .render-frame { width: 100%; min-height: 340px; margin-top: 18px; border: 1px solid #334155; border-radius: 12px; background: white; }
 
 @media (max-width: 720px) {
