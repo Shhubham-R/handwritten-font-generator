@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Handwritten Font Preview</title>
+  <meta name="description" content="Preview handwritten TTF fonts directly from GitHub Pages." />
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-2: #1f2630;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #9da7b3;
+      --accent: #58a6ff;
+      --paper: #fffef8;
+      --ink: #1f2937;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #0b1220 0%, #0d1117 100%);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding: 22px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 720px;
+    }
+
+    .badge {
+      padding: 0.35rem 0.7rem;
+      background: var(--accent);
+      color: white;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .panel-body {
+      padding: 18px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    select,
+    textarea,
+    button {
+      width: 100%;
+      font: inherit;
+      border-radius: 12px;
+    }
+
+    select,
+    textarea {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 12px 14px;
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      padding: 12px 16px;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+    }
+
+    .font-meta {
+      margin-top: 14px;
+      padding: 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .font-meta strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .font-meta p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .paper {
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 18px;
+      min-height: 620px;
+      padding: 52px 56px;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .preview-text {
+      min-height: 520px;
+      font-size: 58px;
+      line-height: 1.65;
+      letter-spacing: 0.5px;
+    }
+
+    .preview-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    footer {
+      margin-top: 18px;
+      text-align: center;
+      color: #7d8590;
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 920px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .paper {
+        padding: 28px 20px;
+        min-height: 460px;
+      }
+
+      .preview-text {
+        font-size: 38px;
+        min-height: 360px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div>
+        <h1>Handwritten Font Preview</h1>
+        <p>Pick one of the TTF fonts from this repository, type your text, and preview it live in a fully static site hosted on GitHub Pages.</p>
+      </div>
+      <span class="badge">Static</span>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-header">Controls</div>
+        <div class="panel-body">
+          <div class="field">
+            <label for="font-select">Choose font</label>
+            <select id="font-select"></select>
+          </div>
+
+          <div class="field">
+            <label for="preview-input">Preview text</label>
+            <textarea id="preview-input">The quick brown fox jumps over the lazy dog.
+0123456789
+
+This is a live preview of the handwritten TTF font.</textarea>
+          </div>
+
+          <button id="reset-btn" type="button">Reset sample text</button>
+
+          <div class="font-meta">
+            <strong id="font-name">—</strong>
+            <p id="font-note">Select a font to preview it.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">Preview</div>
+        <div class="panel-body">
+          <div class="preview-toolbar">
+            <span>Live preview</span>
+            <span class="muted" id="font-status">Loading fonts…</span>
+          </div>
+          <div class="paper">
+            <div id="preview" class="preview-text"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Hosted entirely on GitHub Pages · fonts served directly from this repository
+    </footer>
+  </div>
+
+  <script>
+    const fonts = [
+      {
+        id: 'qebev',
+        name: 'Bev',
+        family: 'QEBEV',
+        file: 'frontend/public/fonts/QEBEV.ttf',
+        note: 'Soft, rounded, casual notes.'
+      },
+      {
+        id: 'qebradenhill',
+        name: 'Braden Hill',
+        family: 'QEBradenHill',
+        file: 'frontend/public/fonts/QEBradenHill.ttf',
+        note: 'Clean, upright, neat student-style handwriting.'
+      },
+      {
+        id: 'qecarolinemutiboko',
+        name: 'Caroline Mutiboko',
+        family: 'QECarolineMutiboko',
+        file: 'frontend/public/fonts/QECarolineMutiboko.ttf',
+        note: 'Elegant, slightly airy handwriting.'
+      },
+      {
+        id: 'qejer',
+        name: 'JER',
+        family: 'QEJER',
+        file: 'frontend/public/fonts/QEJER.ttf',
+        note: 'Quick, natural, lightly messy strokes.'
+      },
+      {
+        id: 'qejohncaplin',
+        name: 'John Caplin',
+        family: 'QEJohnCaplin',
+        file: 'frontend/public/fonts/QEJohnCaplin.ttf',
+        note: 'Compact, tidy, practical handwriting.'
+      },
+      {
+        id: 'qeruthstafford',
+        name: 'Ruth Stafford',
+        family: 'QERuthStafford',
+        file: 'frontend/public/fonts/QERuthStafford.ttf',
+        note: 'Warm, readable, personal-letter feel.'
+      }
+    ];
+
+    const defaultText = `The quick brown fox jumps over the lazy dog.\n0123456789\n\nThis is a live preview of the handwritten TTF font.`;
+
+    const fontSelect = document.getElementById('font-select');
+    const previewInput = document.getElementById('preview-input');
+    const preview = document.getElementById('preview');
+    const fontName = document.getElementById('font-name');
+    const fontNote = document.getElementById('font-note');
+    const fontStatus = document.getElementById('font-status');
+    const resetBtn = document.getElementById('reset-btn');
+
+    fonts.forEach((font, index) => {
+      const option = document.createElement('option');
+      option.value = font.id;
+      option.textContent = font.name;
+      if (index === 0) option.selected = true;
+      fontSelect.appendChild(option);
+    });
+
+    async function loadFont(font) {
+      fontStatus.textContent = `Loading ${font.name}…`;
+      const fontFace = new FontFace(font.family, `url(${font.file})`);
+      const loaded = await fontFace.load();
+      document.fonts.add(loaded);
+      fontStatus.textContent = `${font.name} loaded`;
+    }
+
+    function getSelectedFont() {
+      return fonts.find((font) => font.id === fontSelect.value) || fonts[0];
+    }
+
+    function updatePreviewText() {
+      preview.textContent = previewInput.value;
+    }
+
+    async function applyFont() {
+      const selected = getSelectedFont();
+      fontName.textContent = selected.name;
+      fontNote.textContent = selected.note;
+      await loadFont(selected);
+      preview.style.fontFamily = `"${selected.family}", cursive`;
+      updatePreviewText();
+    }
+
+    fontSelect.addEventListener('change', () => {
+      applyFont().catch((error) => {
+        console.error(error);
+        fontStatus.textContent = 'Failed to load font';
+      });
+    });
+
+    previewInput.addEventListener('input', updatePreviewText);
+
+    resetBtn.addEventListener('click', () => {
+      previewInput.value = defaultText;
+      updatePreviewText();
+    });
+
+    applyFont().catch((error) => {
+      console.error(error);
+      fontStatus.textContent = 'Failed to load font';
+    });
+  </script>
+</body>
+</html>
