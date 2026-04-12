@@ -19,6 +19,8 @@ If you want to create your own handwritten fonts for use, then use this preview 
 
 Just upload your handwritten image and it will create your own font, by scanning each letters and words, it will mimic your handwrittings
 
+![Preview UI](assets/preview.png)
+
 ## Tech
 
 - plain static HTML/CSS/JavaScript
