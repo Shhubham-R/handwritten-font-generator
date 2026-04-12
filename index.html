@@ -110,14 +110,16 @@
 
     select,
     textarea,
-    button {
+    button,
+    input[type="file"] {
       width: 100%;
       font: inherit;
       border-radius: 12px;
     }
 
     select,
-    textarea {
+    textarea,
+    input[type="file"] {
       border: 1px solid var(--border);
       background: var(--surface-2);
       color: var(--text);
@@ -241,6 +243,11 @@
           </div>
 
           <div class="field">
+            <label for="font-upload">Or upload your own font</label>
+            <input id="font-upload" type="file" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" />
+          </div>
+
+          <div class="field">
             <label for="preview-input">Preview text</label>
             <textarea id="preview-input">The quick brown fox jumps over the lazy dog.
 0123456789
@@ -331,6 +338,8 @@ This is a live preview of the handwritten TTF font.</textarea>
     const fontNote = document.getElementById('font-note');
     const fontStatus = document.getElementById('font-status');
     const resetBtn = document.getElementById('reset-btn');
+    const fontUpload = document.getElementById('font-upload');
+    let uploadedFontCounter = 0;
 
     fonts.forEach((font, index) => {
       const option = document.createElement('option');
@@ -342,7 +351,10 @@ This is a live preview of the handwritten TTF font.</textarea>
 
     async function loadFont(font) {
       fontStatus.textContent = `Loading ${font.name}…`;
-      const fontFace = new FontFace(font.family, `url(${font.file})`);
+      const source = font.file
+        ? `url(${font.file})`
+        : `url(${font.objectUrl})`;
+      const fontFace = new FontFace(font.family, source);
       const loaded = await fontFace.load();
       document.fonts.add(loaded);
       fontStatus.textContent = `${font.name} loaded`;
@@ -377,6 +389,33 @@ This is a live preview of the handwritten TTF font.</textarea>
     resetBtn.addEventListener('click', () => {
       previewInput.value = defaultText;
       updatePreviewText();
+    });
+
+    fontUpload.addEventListener('change', async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      uploadedFontCounter += 1;
+      const family = `UploadedFont${uploadedFontCounter}`;
+      const objectUrl = URL.createObjectURL(file);
+      const customFont = {
+        id: `uploaded-${uploadedFontCounter}`,
+        name: file.name,
+        family,
+        objectUrl,
+        note: 'Uploaded locally from your device. This stays in your browser session only.'
+      };
+
+      try {
+        await loadFont(customFont);
+        preview.style.fontFamily = `"${customFont.family}", cursive`;
+        fontName.textContent = customFont.name;
+        fontNote.textContent = customFont.note;
+        updatePreviewText();
+      } catch (error) {
+        console.error(error);
+        fontStatus.textContent = 'Failed to load uploaded font';
+      }
     });
 
     applyFont().catch((error) => {
