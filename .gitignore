@@ -1,18 +1,1 @@
-# Python
-backend/.venv/
-__pycache__/
-*.pyc
 
-# Node
-frontend/node_modules/
-frontend/dist/
-frontend/package-lock.json
-
-# Local runtime/data
-data/
-*.log
-
-# OS/editor
-.DS_Store
-.vscode/
-.idea/
