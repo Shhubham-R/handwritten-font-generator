@@ -72,7 +72,7 @@
 
     .layout {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 340px 1fr;
       gap: 20px;
     }
 
@@ -198,6 +198,10 @@
     }
 
     @media (max-width: 920px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
       .hero {
         flex-direction: column;
         align-items: flex-start;
@@ -229,19 +233,6 @@
 
     <main class="layout">
       <section class="panel">
-        <div class="panel-header">Preview</div>
-        <div class="panel-body">
-          <div class="preview-toolbar">
-            <span>Live preview</span>
-            <span class="muted" id="font-status">Loading fonts…</span>
-          </div>
-          <div class="paper">
-            <div id="preview" class="preview-text"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel">
         <div class="panel-header">Controls</div>
         <div class="panel-body">
           <div class="field">
@@ -262,6 +253,19 @@ This is a live preview of the handwritten TTF font.</textarea>
           <div class="font-meta">
             <strong id="font-name">—</strong>
             <p id="font-note">Select a font to preview it.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">Preview</div>
+        <div class="panel-body">
+          <div class="preview-toolbar">
+            <span>Live preview</span>
+            <span class="muted" id="font-status">Loading fonts…</span>
+          </div>
+          <div class="paper">
+            <div id="preview" class="preview-text"></div>
           </div>
         </div>
       </section>
