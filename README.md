@@ -4,7 +4,7 @@ A simple static handwriting simulator website hosted on GitHub Pages.
 
 This project lets you:
 - preview handwriting-style text directly in the browser
-- load the bundled handwriting TTF variants used by this repository
+- load the bundled handwriting TTF variants copied from your `/home/shub/Downloads/test_fonts/` set into the repository for GitHub Pages deployment
 - type custom text and see the result live on a canvas preview
 - export the rendered handwriting as a PNG image
 - re-randomize the look instantly without changing the text
@@ -34,6 +34,7 @@ Just upload your handwritten image and it will create your own font, by scanning
 ## Tech
 
 - plain static HTML/CSS/JavaScript
+- bundled TTF assets sourced from the local `/home/shub/Downloads/test_fonts/` set for deployment
 - HTML5 Canvas rendering
 - FontFace API for loading TTF fonts in the browser
 - GitHub Pages for hosting
