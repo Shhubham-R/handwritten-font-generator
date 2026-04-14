@@ -1,12 +1,22 @@
 # Handwritten Font Generator
 
-A simple static font preview website hosted on GitHub Pages.
+A simple static handwriting simulator website hosted on GitHub Pages.
 
 This project lets you:
-- preview handwriting-style fonts directly in the browser
-- choose from bundled fonts in this repository
-- upload your own local handwritting font files and test them instantly
-- type custom text and see the result live
+- preview handwriting-style text directly in the browser
+- load the bundled handwriting TTF variants used by this repository
+- type custom text and see the result live on a canvas preview
+- export the rendered handwriting as a PNG image
+- re-randomize the look instantly without changing the text
+
+## Features
+
+What makes this different from a normal font preview:
+- it does not render the whole text with a single font file
+- instead, it loads multiple handwriting font variants and randomly picks one per character
+- repeated letters are forced to use different variants when possible, so the same character does not look mechanically identical
+- every keystroke can re-roll the character-to-font assignments, which makes the text feel more handwritten and less like a standard digital font
+- each glyph also gets subtle seeded wobble, tilt, and scale variation for a more natural handwritten look
 
 ## Live site check out
 
@@ -24,6 +34,8 @@ Just upload your handwritten image and it will create your own font, by scanning
 ## Tech
 
 - plain static HTML/CSS/JavaScript
+- HTML5 Canvas rendering
+- FontFace API for loading TTF fonts in the browser
 - GitHub Pages for hosting
 - no backend
 

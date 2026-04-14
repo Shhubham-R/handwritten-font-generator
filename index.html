@@ -3,425 +3,616 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Handwritten Font Preview</title>
-  <meta name="description" content="Preview handwritten TTF fonts directly from GitHub Pages." />
+  <title>Handwriting Simulator</title>
   <style>
-    * { box-sizing: border-box; }
-
     :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --surface-2: #1f2630;
-      --border: #30363d;
-      --text: #e6edf3;
-      --muted: #9da7b3;
-      --accent: #58a6ff;
-      --paper: #fffef8;
-      --ink: #1f2937;
+      --bg: #f4f1ea;
+      --panel: #fffdf8;
+      --border: #d9d2c3;
+      --text: #2b2a28;
+      --muted: #756f66;
+      --accent: #6c8a6b;
+      --shadow: 0 16px 36px rgba(43, 42, 40, 0.08);
     }
+
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      min-height: 100vh;
-      background: linear-gradient(180deg, #0b1220 0%, #0d1117 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #efebe3 0%, #f7f4ed 100%);
       color: var(--text);
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.5;
+      min-height: 100vh;
     }
 
-    .page {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 24px 16px 48px;
-    }
-
-    .hero {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 16px;
-      margin-bottom: 20px;
-      padding: 22px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-    }
-
-    .hero h1 {
-      margin: 0 0 8px;
-      font-size: clamp(1.8rem, 4vw, 3rem);
-    }
-
-    .hero p {
-      margin: 0;
-      color: var(--muted);
-      max-width: 720px;
-    }
-
-    .badge {
-      padding: 0.35rem 0.7rem;
-      background: var(--accent);
-      color: white;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      white-space: nowrap;
-    }
-
-    .layout {
+    .app {
       display: grid;
-      grid-template-columns: 340px 1fr;
-      gap: 20px;
+      grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+      min-height: 100vh;
     }
 
     .panel {
-      background: var(--surface);
+      padding: 24px;
+    }
+
+    .controls {
+      background: rgba(255,255,255,0.6);
+      border-right: 1px solid rgba(217, 210, 195, 0.8);
+      backdrop-filter: blur(10px);
+    }
+
+    .preview {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 18px;
-      overflow: hidden;
+      box-shadow: var(--shadow);
     }
 
-    .panel-header {
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--border);
+    .controls .card {
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.8rem;
+      line-height: 1.1;
+    }
+
+    p {
+      margin: 0;
       color: var(--muted);
-      font-size: 0.8rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .panel-body {
-      padding: 18px;
-    }
-
-    .field {
-      margin-bottom: 16px;
-    }
-
-    .field label {
-      display: block;
-      margin-bottom: 8px;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    select,
-    textarea,
-    button,
-    input[type="file"] {
-      width: 100%;
-      font: inherit;
-      border-radius: 12px;
-    }
-
-    select,
-    textarea,
-    input[type="file"] {
-      border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--text);
-      padding: 12px 14px;
+      line-height: 1.5;
     }
 
     textarea {
-      min-height: 180px;
+      width: 100%;
+      min-height: 220px;
       resize: vertical;
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      font: inherit;
+      font-size: 1rem;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(108, 138, 107, 0.12);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 16px;
+      margin-top: 16px;
+    }
+
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .value {
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 42px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      padding: 4px;
+      cursor: pointer;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
     }
 
     button {
       border: 0;
-      cursor: pointer;
-      padding: 12px 16px;
-      background: var(--accent);
-      color: white;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
       font-weight: 700;
+      cursor: pointer;
+      background: #232321;
+      color: #fff;
+      transition: transform 0.15s ease, opacity 0.15s ease;
     }
 
-    .font-meta {
-      margin-top: 14px;
-      padding: 14px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 14px;
+    button.secondary {
+      background: #ece7dc;
+      color: var(--text);
     }
 
-    .font-meta strong {
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .status {
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .status strong {
+      font-size: 0.95rem;
+    }
+
+    .font-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .font-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: #f4efe5;
+      border: 1px solid #e3dbcd;
+      font-size: 0.85rem;
+      color: #3d3a35;
+    }
+
+    .font-chip.failed {
+      background: #fbe8e6;
+      border-color: #f1c2bb;
+      color: #8b3d32;
+    }
+
+    .canvas-wrap {
+      flex: 1;
+      min-height: 420px;
+      padding: 16px;
+      overflow: auto;
+    }
+
+    canvas {
       display: block;
-      margin-bottom: 4px;
+      width: 100%;
+      max-width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+      background: #fff;
     }
 
-    .font-meta p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .paper {
-      background: var(--paper);
-      color: var(--ink);
-      border-radius: 18px;
-      min-height: 620px;
-      padding: 52px 56px;
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
-      white-space: pre-wrap;
-      word-break: break-word;
-      overflow-wrap: anywhere;
-    }
-
-    .preview-text {
-      min-height: 520px;
-      font-size: 58px;
-      line-height: 1.65;
-      letter-spacing: 0.5px;
-    }
-
-    .preview-toolbar {
+    .meta {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      margin-bottom: 16px;
       color: var(--muted);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      padding: 0 4px;
     }
 
-    .muted {
-      color: var(--muted);
-    }
-
-    footer {
-      margin-top: 18px;
-      text-align: center;
-      color: #7d8590;
-      font-size: 0.82rem;
-    }
-
-    @media (max-width: 920px) {
-      .layout {
+    @media (max-width: 960px) {
+      .app {
         grid-template-columns: 1fr;
       }
 
-      .hero {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .paper {
-        padding: 28px 20px;
-        min-height: 460px;
-      }
-
-      .preview-text {
-        font-size: 38px;
-        min-height: 360px;
+      .controls {
+        border-right: 0;
+        border-bottom: 1px solid rgba(217, 210, 195, 0.8);
       }
     }
   </style>
 </head>
 <body>
-  <div class="page">
-    <header class="hero">
-      <div>
-        <h1>Handwritten Font Preview</h1>
-        <p>Pick one of the TTF fonts from this repository, type your text, and preview it live in a fully static site hosted on GitHub Pages.</p>
+  <div class="app">
+    <aside class="panel controls">
+      <div class="card">
+        <h1>Handwriting Simulator</h1>
+        <p>Each character is painted with a randomly chosen handwriting font variant, then nudged slightly so the result feels more human.</p>
       </div>
-      <span class="badge">Static</span>
-    </header>
 
-    <main class="layout">
-      <section class="panel">
-        <div class="panel-header">Controls</div>
-        <div class="panel-body">
-          <div class="field">
-            <label for="font-select">Choose font</label>
-            <select id="font-select"></select>
+      <div class="card">
+        <label for="inputText">Text</label>
+        <textarea id="inputText" spellcheck="false">This is a handwriting simulator.
+Each letter can come from a different font variant.
+Type here and it re-rolls on every keystroke.</textarea>
+
+        <div class="grid">
+          <div class="control">
+            <label for="fontSize">Font size <span class="value" id="fontSizeValue"></span></label>
+            <input id="fontSize" type="range" min="24" max="120" step="1" value="56" />
           </div>
 
-          <div class="field">
-            <label for="font-upload">Or upload your own handwritting as font (To create use <a href="https://github.com/Shhubham-R/handwritten-font-generator-Stochastic-text-rendering" target="_blank" rel="noopener noreferrer">handwritten-font-generator-Stochastic-text-rendering</a>)</label>
-            <input id="font-upload" type="file" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" />
+          <div class="control">
+            <label for="lineHeight">Line height <span class="value" id="lineHeightValue"></span></label>
+            <input id="lineHeight" type="range" min="0.9" max="2.2" step="0.01" value="1.35" />
           </div>
 
-          <div class="field">
-            <label for="preview-input">Preview text</label>
-            <textarea id="preview-input">The quick brown fox jumps over the lazy dog.
-0123456789
-
-This is a live preview of the handwritten TTF font.</textarea>
+          <div class="control full">
+            <label for="letterSpacing">Letter spacing <span class="value" id="letterSpacingValue"></span></label>
+            <input id="letterSpacing" type="range" min="-2" max="20" step="0.1" value="0.5" />
           </div>
 
-          <button id="reset-btn" type="button">Reset sample text</button>
-
-          <div class="font-meta">
-            <strong id="font-name">—</strong>
-            <p id="font-note">Select a font to preview it.</p>
+          <div class="control">
+            <label for="inkColor">Ink color</label>
+            <input id="inkColor" type="color" value="#1f1a17" />
           </div>
-        </div>
-      </section>
 
-      <section class="panel">
-        <div class="panel-header">Preview</div>
-        <div class="panel-body">
-          <div class="preview-toolbar">
-            <span>Live preview</span>
-            <span class="muted" id="font-status">Loading fonts…</span>
-          </div>
-          <div class="paper">
-            <div id="preview" class="preview-text"></div>
+          <div class="control">
+            <label for="paperColor">Paper color</label>
+            <input id="paperColor" type="color" value="#fffdf8" />
           </div>
         </div>
-      </section>
+
+        <div class="actions">
+          <button id="randomizeBtn" type="button">Randomize</button>
+          <button id="exportBtn" type="button" class="secondary">Export PNG</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="panel preview">
+      <div class="card status">
+        <strong>Loaded fonts</strong>
+        <div id="fontStatus">Loading local TTF files…</div>
+        <div class="font-list" id="fontList"></div>
+      </div>
+
+      <div class="meta">
+        <span id="renderInfo">Waiting for fonts…</span>
+        <span>Canvas preview</span>
+      </div>
+
+      <div class="card canvas-wrap">
+        <canvas id="previewCanvas" width="1400" height="900"></canvas>
+      </div>
     </main>
-
-    <footer>
-      Hosted entirely on GitHub Pages · fonts served directly from this repository
-    </footer>
   </div>
 
   <script>
-    const fonts = [
-      {
-        id: 'qebev',
-        name: 'Bev',
-        family: 'QEBEV',
-        file: 'fonts/QEBEV.ttf',
-        note: 'Soft, rounded, casual notes.'
-      },
-      {
-        id: 'qebradenhill',
-        name: 'Braden Hill',
-        family: 'QEBradenHill',
-        file: 'fonts/QEBradenHill.ttf',
-        note: 'Clean, upright, neat student-style handwriting.'
-      },
-      {
-        id: 'qecarolinemutiboko',
-        name: 'Caroline Mutiboko',
-        family: 'QECarolineMutiboko',
-        file: 'fonts/QECarolineMutiboko.ttf',
-        note: 'Elegant, slightly airy handwriting.'
-      },
-      {
-        id: 'qejer',
-        name: 'JER',
-        family: 'QEJER',
-        file: 'fonts/QEJER.ttf',
-        note: 'Quick, natural, lightly messy strokes.'
-      },
-      {
-        id: 'qejohncaplin',
-        name: 'John Caplin',
-        family: 'QEJohnCaplin',
-        file: 'fonts/QEJohnCaplin.ttf',
-        note: 'Compact, tidy, practical handwriting.'
-      },
-      {
-        id: 'qeruthstafford',
-        name: 'Ruth Stafford',
-        family: 'QERuthStafford',
-        file: 'fonts/QERuthStafford.ttf',
-        note: 'Warm, readable, personal-letter feel.'
-      }
+    const FONT_FILES = [
+      { file: 'QECarolineMutiboko.ttf', family: 'HandVariant01' },
+      { file: 'QEDavidReid.ttf', family: 'HandVariant02' },
+      { file: 'QEDavidReidCAP.ttf', family: 'HandVariant03' },
+      { file: 'QESamRoberts2.ttf', family: 'HandVariant04' },
+      { file: 'QEVickyCaulfield.ttf', family: 'HandVariant05' }
     ];
 
-    const defaultText = `The quick brown fox jumps over the lazy dog.\n0123456789\n\nThis is a live preview of the handwritten TTF font.`;
+    const state = {
+      loadedFonts: [],
+      failedFonts: [],
+      randomSeed: 1,
+      lastText: ''
+    };
 
-    const fontSelect = document.getElementById('font-select');
-    const previewInput = document.getElementById('preview-input');
-    const preview = document.getElementById('preview');
-    const fontName = document.getElementById('font-name');
-    const fontNote = document.getElementById('font-note');
-    const fontStatus = document.getElementById('font-status');
-    const resetBtn = document.getElementById('reset-btn');
-    const fontUpload = document.getElementById('font-upload');
-    let uploadedFontCounter = 0;
+    const els = {
+      inputText: document.getElementById('inputText'),
+      fontSize: document.getElementById('fontSize'),
+      lineHeight: document.getElementById('lineHeight'),
+      letterSpacing: document.getElementById('letterSpacing'),
+      inkColor: document.getElementById('inkColor'),
+      paperColor: document.getElementById('paperColor'),
+      randomizeBtn: document.getElementById('randomizeBtn'),
+      exportBtn: document.getElementById('exportBtn'),
+      previewCanvas: document.getElementById('previewCanvas'),
+      fontList: document.getElementById('fontList'),
+      fontStatus: document.getElementById('fontStatus'),
+      renderInfo: document.getElementById('renderInfo'),
+      fontSizeValue: document.getElementById('fontSizeValue'),
+      lineHeightValue: document.getElementById('lineHeightValue'),
+      letterSpacingValue: document.getElementById('letterSpacingValue')
+    };
 
-    fonts.forEach((font, index) => {
-      const option = document.createElement('option');
-      option.value = font.id;
-      option.textContent = font.name;
-      if (index === 0) option.selected = true;
-      fontSelect.appendChild(option);
-    });
+    const ctx = els.previewCanvas.getContext('2d');
+    const DPR = Math.max(1, window.devicePixelRatio || 1);
+    const VIEW_WIDTH = 1400;
+    const SIDE_PADDING = 56;
+    const TOP_PADDING = 64;
+    const BOTTOM_PADDING = 80;
 
-    async function loadFont(font) {
-      fontStatus.textContent = `Loading ${font.name}…`;
-      const source = font.file
-        ? `url(${font.file})`
-        : `url(${font.objectUrl})`;
-      const fontFace = new FontFace(font.family, source);
-      const loaded = await fontFace.load();
-      document.fonts.add(loaded);
-      fontStatus.textContent = `${font.name} loaded`;
-    }
-
-    function getSelectedFont() {
-      return fonts.find((font) => font.id === fontSelect.value) || fonts[0];
-    }
-
-    function updatePreviewText() {
-      preview.textContent = previewInput.value;
-    }
-
-    async function applyFont() {
-      const selected = getSelectedFont();
-      fontName.textContent = selected.name;
-      fontNote.textContent = selected.note;
-      await loadFont(selected);
-      preview.style.fontFamily = `"${selected.family}", cursive`;
-      updatePreviewText();
-    }
-
-    fontSelect.addEventListener('change', () => {
-      applyFont().catch((error) => {
-        console.error(error);
-        fontStatus.textContent = 'Failed to load font';
-      });
-    });
-
-    previewInput.addEventListener('input', updatePreviewText);
-
-    resetBtn.addEventListener('click', () => {
-      previewInput.value = defaultText;
-      updatePreviewText();
-    });
-
-    fontUpload.addEventListener('change', async (event) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      uploadedFontCounter += 1;
-      const family = `UploadedFont${uploadedFontCounter}`;
-      const objectUrl = URL.createObjectURL(file);
-      const customFont = {
-        id: `uploaded-${uploadedFontCounter}`,
-        name: file.name,
-        family,
-        objectUrl,
-        note: 'Uploaded locally from your device. This stays in your browser session only.'
-      };
-
-      try {
-        await loadFont(customFont);
-        preview.style.fontFamily = `"${customFont.family}", cursive`;
-        fontName.textContent = customFont.name;
-        fontNote.textContent = customFont.note;
-        updatePreviewText();
-      } catch (error) {
-        console.error(error);
-        fontStatus.textContent = 'Failed to load uploaded font';
+    function xmur3(str) {
+      let h = 1779033703 ^ str.length;
+      for (let i = 0; i < str.length; i++) {
+        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+        h = (h << 13) | (h >>> 19);
       }
+      return function() {
+        h = Math.imul(h ^ (h >>> 16), 2246822507);
+        h = Math.imul(h ^ (h >>> 13), 3266489909);
+        return (h ^= h >>> 16) >>> 0;
+      };
+    }
+
+    function mulberry32(seed) {
+      return function() {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function makeRng(key) {
+      const seedFactory = xmur3(key);
+      return mulberry32(seedFactory());
+    }
+
+    function updateLabels() {
+      els.fontSizeValue.textContent = `${Number(els.fontSize.value)} px`;
+      els.lineHeightValue.textContent = Number(els.lineHeight.value).toFixed(2);
+      els.letterSpacingValue.textContent = `${Number(els.letterSpacing.value).toFixed(1)} px`;
+    }
+
+    function sanitizeFamily(name) {
+      return `'${String(name).replace(/'/g, "\\'")}'`;
+    }
+
+    async function loadFonts() {
+      const loaded = [];
+      const failed = [];
+
+      for (const font of FONT_FILES) {
+        try {
+          const face = new FontFace(font.family, `url(${encodeURI(font.file)}) format('truetype')`);
+          await face.load();
+          document.fonts.add(face);
+          loaded.push(font);
+        } catch (error) {
+          console.error('Failed to load font', font.file, error);
+          failed.push({ ...font, error });
+        }
+      }
+
+      state.loadedFonts = loaded;
+      state.failedFonts = failed;
+      renderFontStatus();
+      render();
+    }
+
+    function renderFontStatus() {
+      els.fontList.innerHTML = '';
+
+      if (!state.loadedFonts.length && !state.failedFonts.length) {
+        els.fontStatus.textContent = 'No font status available yet.';
+        return;
+      }
+
+      const parts = [];
+      if (state.loadedFonts.length) parts.push(`${state.loadedFonts.length} loaded`);
+      if (state.failedFonts.length) parts.push(`${state.failedFonts.length} failed`);
+      els.fontStatus.textContent = parts.join(' • ');
+
+      [...state.loadedFonts.map(font => ({ ...font, ok: true })), ...state.failedFonts.map(font => ({ ...font, ok: false }))].forEach(font => {
+        const chip = document.createElement('div');
+        chip.className = `font-chip${font.ok ? '' : ' failed'}`;
+        chip.textContent = font.file;
+        els.fontList.appendChild(chip);
+      });
+    }
+
+    function chooseFont(char, index, prevChar, prevFont) {
+      const fonts = state.loadedFonts;
+      if (!fonts.length) return null;
+
+      const rng = makeRng(`${state.randomSeed}|font|${index}|${char}`);
+      let chosen = fonts[Math.floor(rng() * fonts.length)] || fonts[0];
+
+      if (prevChar === char && prevFont && fonts.length > 1 && chosen.family === prevFont.family) {
+        const alternatives = fonts.filter(font => font.family !== prevFont.family);
+        chosen = alternatives[Math.floor(rng() * alternatives.length)] || alternatives[0] || chosen;
+      }
+
+      return chosen;
+    }
+
+    function buildGlyphs(text) {
+      const glyphs = [];
+      let prevChar = null;
+      let prevFont = null;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        if (char === '\r') continue;
+
+        if (char === '\n') {
+          glyphs.push({ char, newline: true });
+          prevChar = null;
+          prevFont = null;
+          continue;
+        }
+
+        const font = chooseFont(char, i, prevChar, prevFont);
+        const rng = makeRng(`${state.randomSeed}|glyph|${i}|${char}`);
+        const yOffset = (rng() * 4) - 2;
+        const rotation = ((rng() * 3) - 1.5) * Math.PI / 180;
+        const scale = 0.96 + (rng() * 0.08);
+
+        glyphs.push({
+          char,
+          font,
+          yOffset,
+          rotation,
+          scale,
+          index: i
+        });
+
+        prevChar = char;
+        prevFont = font;
+      }
+
+      return glyphs;
+    }
+
+    function setCanvasSize(cssWidth, cssHeight) {
+      els.previewCanvas.style.width = `${cssWidth}px`;
+      els.previewCanvas.style.height = `${cssHeight}px`;
+      els.previewCanvas.width = Math.round(cssWidth * DPR);
+      els.previewCanvas.height = Math.round(cssHeight * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+
+    function render() {
+      updateLabels();
+
+      const text = els.inputText.value || '';
+      state.lastText = text;
+
+      const fontSize = Number(els.fontSize.value);
+      const lineHeightMult = Number(els.lineHeight.value);
+      const letterSpacing = Number(els.letterSpacing.value);
+      const inkColor = els.inkColor.value;
+      const paperColor = els.paperColor.value;
+      const lineHeightPx = fontSize * lineHeightMult;
+      const maxWidth = VIEW_WIDTH - SIDE_PADDING * 2;
+      const glyphs = buildGlyphs(text);
+      const lines = [];
+      const fallbackFamily = 'serif';
+
+      let currentLine = [];
+      let lineWidth = 0;
+      let maxAscent = fontSize * 0.78;
+      let maxDescent = fontSize * 0.28;
+
+      function pushLine(force = false) {
+        if (currentLine.length || force) {
+          lines.push({
+            glyphs: currentLine,
+            width: Math.max(0, lineWidth),
+            ascent: maxAscent,
+            descent: maxDescent
+          });
+        }
+        currentLine = [];
+        lineWidth = 0;
+        maxAscent = fontSize * 0.78;
+        maxDescent = fontSize * 0.28;
+      }
+
+      for (const glyph of glyphs) {
+        if (glyph.newline) {
+          pushLine(true);
+          continue;
+        }
+
+        const family = glyph.font ? sanitizeFamily(glyph.font.family) : fallbackFamily;
+        const scaledSize = fontSize * glyph.scale;
+        ctx.font = `${scaledSize}px ${family}, ${fallbackFamily}`;
+        const metrics = ctx.measureText(glyph.char);
+        const width = metrics.width;
+        const ascent = metrics.actualBoundingBoxAscent || scaledSize * 0.78;
+        const descent = metrics.actualBoundingBoxDescent || scaledSize * 0.28;
+        const advance = width + letterSpacing;
+
+        if (currentLine.length && lineWidth + advance > maxWidth) {
+          pushLine(false);
+        }
+
+        currentLine.push({ ...glyph, width, advance, ascent, descent, family, scaledSize });
+        lineWidth += advance;
+        maxAscent = Math.max(maxAscent, ascent);
+        maxDescent = Math.max(maxDescent, descent);
+      }
+
+      pushLine(currentLine.length === 0 && lines.length === 0);
+
+      const contentHeight = lines.length * lineHeightPx;
+      const cssHeight = Math.max(520, Math.ceil(TOP_PADDING + contentHeight + BOTTOM_PADDING));
+      setCanvasSize(VIEW_WIDTH, cssHeight);
+
+      ctx.fillStyle = paperColor;
+      ctx.fillRect(0, 0, VIEW_WIDTH, cssHeight);
+      ctx.fillStyle = inkColor;
+      ctx.textBaseline = 'alphabetic';
+      ctx.textAlign = 'left';
+
+      let y = TOP_PADDING;
+      let renderedGlyphs = 0;
+
+      for (const line of lines) {
+        const baselineY = y + line.ascent;
+        let x = SIDE_PADDING;
+
+        for (const glyph of line.glyphs) {
+          renderedGlyphs += 1;
+          ctx.save();
+          ctx.translate(x + (glyph.width / 2), baselineY + glyph.yOffset);
+          ctx.rotate(glyph.rotation);
+          ctx.scale(glyph.scale, glyph.scale);
+          ctx.font = `${fontSize}px ${glyph.family}, ${fallbackFamily}`;
+          ctx.fillText(glyph.char, -(glyph.width / 2), 0);
+          ctx.restore();
+          x += glyph.advance;
+        }
+
+        y += lineHeightPx;
+      }
+
+      const loadedNames = state.loadedFonts.map(font => font.file).join(', ') || 'none';
+      els.renderInfo.textContent = `${renderedGlyphs} glyphs • ${lines.length} line${lines.length === 1 ? '' : 's'} • ${state.loadedFonts.length} fonts active`;
+      els.previewCanvas.setAttribute('aria-label', `Preview rendered using fonts: ${loadedNames}`);
+    }
+
+    function reroll() {
+      state.randomSeed += 1;
+      render();
+    }
+
+    function exportPNG() {
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      link.download = `handwriting-${timestamp}.png`;
+      link.href = els.previewCanvas.toDataURL('image/png');
+      link.click();
+    }
+
+    ['fontSize', 'lineHeight', 'letterSpacing', 'inkColor', 'paperColor'].forEach(key => {
+      els[key].addEventListener('input', render);
     });
 
-    applyFont().catch((error) => {
-      console.error(error);
-      fontStatus.textContent = 'Failed to load font';
+    els.inputText.addEventListener('input', () => {
+      state.randomSeed += 1;
+      render();
     });
+
+    els.randomizeBtn.addEventListener('click', reroll);
+    els.exportBtn.addEventListener('click', exportPNG);
+    window.addEventListener('resize', render);
+
+    updateLabels();
+    renderFontStatus();
+    loadFonts();
   </script>
 </body>
 </html>
